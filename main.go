@@ -83,16 +83,20 @@ func (g *Game) getTileImageCallback(m *GameMap, x, y int) *ebiten.Image {
 			m.IsSolid(x, y+1),
 			m.IsSolid(x+1, y+1),
 		}
-
-		if !solidAround[7] { // Check if there's grass (floor) below
+		if !solidAround[1] && !solidAround[7] {
+			return g.stoneSpriteSheet.GetTileImageByCoord(3, 1)
+		} else if !solidAround[3] && !solidAround[5] {
+			return g.stoneSpriteSheet.GetTileImageByCoord(1, 3)
+		} else if !solidAround[7] {
 			return g.stoneSpriteSheet.GetTileImageByCoord(2, 1) // Wall with grass below
-		} else if !solidAround[5] { // Check if there's a non-wall to the right
-			return g.stoneSpriteSheet.GetTileImageByCoord(1, 2) // Wall with right edge
+		} else if !solidAround[5] {
+			return g.stoneSpriteSheet.GetTileImageByCoord(1, 2)
+		} else if !solidAround[3] {
+			return g.stoneSpriteSheet.GetTileImageByCoord(1, 0)
+		} else if !solidAround[1] {
+			return g.stoneSpriteSheet.GetTileImageByCoord(0, 1)
 		}
 		return g.stoneSpriteSheet.GetTileImageByCoord(1, 1) // Regular wall
-	case TileFloor:
-		// Use grass spritesheet at position (0,0)
-		return g.grassSpriteSheet.GetTileImageByCoord(0, 0)
 	case TileSlow:
 		return createTileImage(color.RGBA{100, 50, 50, 255}) // Red slow tile
 	case TileFast:
@@ -101,9 +105,16 @@ func (g *Game) getTileImageCallback(m *GameMap, x, y int) *ebiten.Image {
 		return createTileImage(color.RGBA{80, 50, 60, 255}) // Light red mild slow tile
 	case TileFastMild:
 		return createTileImage(color.RGBA{50, 80, 60, 255}) // Light green mild fast tile
+	case TileFloor:
+		fallthrough
 	default:
 		// Default to floor (grass)
-		return g.grassSpriteSheet.GetTileImageByCoord(0, 0)
+		// These are all grass tiles, so grab one at random, but make sure it's the same for this x/y coordinate
+		grassTiles := []struct {
+			row, col int
+		}{{0, 0}, {0, 1}, {0, 2}, {0, 3}, {0, 4}, {1, 0}, {1, 1}, {2, 0}, {2, 1}, {3, 0}, {3, 1}, {3, 2}, {3, 3}}
+		tileIndex := ((x + y*m.Width) * 289) % len(grassTiles)
+		return g.grassSpriteSheet.GetTileImageByCoord(grassTiles[tileIndex].row, grassTiles[tileIndex].col)
 	}
 }
 
@@ -134,6 +145,19 @@ func main() {
 #...<....(...)..>....#
 #........#...........#
 ####.#########.....###
+#....................#
+#....................#
+#....................#
+#....................#
+#....................#
+#....................#
+#....................#
+#....................#
+#....................#
+#....................#
+#....................#
+#....................#
+#....................#
 #........#...........#
 #...)....(...<..>....#
 #........#...........#

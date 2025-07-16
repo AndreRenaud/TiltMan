@@ -2,10 +2,11 @@
 - Create a minimal ebitengine main.go file that opens a 1280x720 window. Title the window "TiltMan"
 - Create a file marble.go, which draws a circle. It should have a type Marble which remembers its position, speed, direction etc... and each update it should update its position based on its velocity.
 - Add a file 'map.go', which defines the map. The map is described using an ASCII drawing, such as:
+  Where difference characters define what will be drawn in that square. The following characters are currently defined:
+  - # a solid wall
+  - . an empty bit of floor
+  - < a bit of floor that slows the marble down
+  - > a bit of floor that speeds the marble up
+- Change the Marbles update function so that instead of actually changing the x/y coord, it calculates the new ones and returns them. We can then verify that we're not inside a wall before applying them.
 
-Where difference characters define what will be drawn in that square. The following characters are currently defined:
 
-- # a solid wall
-- . an empty bit of floor
-- < a bit of floor that slows the marble down
-- > a bit of floor that speeds the marble up

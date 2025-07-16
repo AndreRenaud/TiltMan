@@ -1,7 +1,6 @@
 package main
 
 import (
-	"image"
 	"image/color"
 	"math"
 
@@ -11,33 +10,32 @@ import (
 
 // Marble represents a marble with physics properties
 type Marble struct {
-	X, Y     float64         // Position
-	VX, VY   float64         // Velocity
-	Radius   float64         // Radius of the marble
-	BBox     image.Rectangle // Bounding box for collision detection
+	X, Y     float64 // Position
+	VX, VY   float64 // Velocity
+	Radius   float64 // Radius of the marble
 	Color    color.Color
 	Friction float64 // Friction coefficient (0-1, where 1 = no friction)
 }
 
 // NewMarble creates a new marble at the specified position
-func NewMarble(x, y, radius float64, bbox image.Rectangle, c color.Color) *Marble {
+func NewMarble(x, y, radius float64, c color.Color) *Marble {
 	return &Marble{
 		X:        x,
 		Y:        y,
 		VX:       0,
 		VY:       0,
-		BBox:     bbox,
 		Radius:   radius,
 		Color:    c,
 		Friction: 0.98, // Default friction
 	}
 }
 
-// Update updates the marble's position based on its velocity
-func (m *Marble) Update() {
-	// Update position based on velocity
-	m.X += m.VX
-	m.Y += m.VY
+// Update calculates the marble's new position based on its velocity and returns it
+// The caller is responsible for checking collisions and applying the new position
+func (m *Marble) Update() (newX, newY float64) {
+	// Calculate new position based on velocity
+	newX = m.X + m.VX
+	newY = m.Y + m.VY
 
 	// Apply friction to gradually slow down the marble
 	m.VX *= m.Friction
@@ -51,7 +49,7 @@ func (m *Marble) Update() {
 		m.VY = 0
 	}
 
-	m.constrainToBounds()
+	return newX, newY
 }
 
 // AddForce adds a force to the marble (for tilt mechanics)
@@ -80,29 +78,6 @@ func (m *Marble) SetVelocity(vx, vy float64) {
 // GetVelocity returns the marble's current velocity
 func (m *Marble) GetVelocity() (float64, float64) {
 	return m.VX, m.VY
-}
-
-// ConstrainToBounds keeps the marble within the specified bounds
-func (m *Marble) constrainToBounds() {
-	// Bounce off left and right walls
-	width := float64(m.BBox.Dx())
-	height := float64(m.BBox.Dy())
-	if m.X-m.Radius < 0 {
-		m.X = m.Radius
-		m.VX = -m.VX * 0.8 // Dampen the bounce
-	} else if m.X+m.Radius > width {
-		m.X = width - m.Radius
-		m.VX = -m.VX * 0.8
-	}
-
-	// Bounce off top and bottom walls
-	if m.Y-m.Radius < 0 {
-		m.Y = m.Radius
-		m.VY = -m.VY * 0.8
-	} else if m.Y+m.Radius > height {
-		m.Y = height - m.Radius
-		m.VY = -m.VY * 0.8
-	}
 }
 
 // Draw renders the marble to the screen

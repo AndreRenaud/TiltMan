@@ -1,7 +1,6 @@
 package main
 
 import (
-	"image"
 	"image/color"
 	"log"
 
@@ -41,12 +40,12 @@ func (g *Game) Update() error {
 		g.marble.SetVelocity(0, 0)
 	}
 
-	// Update marble physics
-	g.marble.Update()
+	// Update marble physics and get proposed new position
+	proposedX, proposedY := g.marble.Update()
 
 	// Apply map collision detection
-	newX, newY := g.gameMap.CheckCollision(g.marble)
-	g.marble.SetPosition(newX, newY)
+	finalX, finalY := g.gameMap.CheckCollision(g.marble, proposedX, proposedY)
+	g.marble.SetPosition(finalX, finalY)
 
 	// Apply tile effects (speed changes)
 	g.gameMap.ApplyTileEffects(g.marble)
@@ -96,10 +95,9 @@ func main() {
 	game.gameMap = NewGameMap(sampleMap, 40, game.screenWidth, game.screenHeight)
 
 	// Create marble at starting position (adjust to be within the map)
-	bounds := image.Rect(0, 0, game.screenWidth, game.screenHeight)
 	startX := float64(game.gameMap.OffsetX + 2*game.gameMap.TileSize) // Start in an open area
 	startY := float64(game.gameMap.OffsetY + 2*game.gameMap.TileSize)
-	game.marble = NewMarble(startX, startY, 15, bounds, color.RGBA{255, 100, 100, 255})
+	game.marble = NewMarble(startX, startY, 15, color.RGBA{255, 100, 100, 255})
 
 	ebiten.SetWindowSize(game.screenWidth, game.screenHeight)
 	ebiten.SetWindowTitle("TiltMan")

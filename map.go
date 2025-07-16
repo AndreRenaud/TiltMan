@@ -137,8 +137,7 @@ func (m *GameMap) GetEffectAt(pixelX, pixelY float64) float64 {
 }
 
 // CheckCollision checks for collision with walls and returns corrected position
-func (m *GameMap) CheckCollision(marble *Marble) (float64, float64) {
-	newX, newY := marble.X, marble.Y
+func (m *GameMap) CheckCollision(marble *Marble, newX, newY float64) (float64, float64) {
 	radius := marble.Radius
 
 	// Check collision in multiple points around the marble's circumference

@@ -83,7 +83,15 @@ func (g *Game) getTileImageCallback(m *GameMap, x, y int) *ebiten.Image {
 			m.IsSolid(x, y+1),
 			m.IsSolid(x+1, y+1),
 		}
-		if !solidAround[1] && !solidAround[7] {
+		if !solidAround[1] && !solidAround[3] && !solidAround[5] && !solidAround[7] {
+			return g.stoneSpriteSheet.GetTileImageByCoord(3, 3)
+		} else if !solidAround[1] && !solidAround[3] && !solidAround[5] {
+			return g.stoneSpriteSheet.GetTileImageByCoord(0, 3)
+		} else if !solidAround[1] && !solidAround[5] && !solidAround[7] {
+			return g.stoneSpriteSheet.GetTileImageByCoord(3, 2)
+		} else if !solidAround[1] && !solidAround[3] && !solidAround[7] {
+			return g.stoneSpriteSheet.GetTileImageByCoord(3, 0)
+		} else if !solidAround[1] && !solidAround[7] {
 			return g.stoneSpriteSheet.GetTileImageByCoord(3, 1)
 		} else if !solidAround[3] && !solidAround[5] {
 			return g.stoneSpriteSheet.GetTileImageByCoord(1, 3)
@@ -146,6 +154,7 @@ func main() {
 #........#...........#
 ####.#########.....###
 #....................#
+#....#...............#
 #....................#
 #....................#
 #....................#
@@ -156,8 +165,7 @@ func main() {
 #....................#
 #....................#
 #....................#
-#....................#
-#....................#
+#........#...........#
 #........#...........#
 #...)....(...<..>....#
 #........#...........#

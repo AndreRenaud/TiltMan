@@ -42,20 +42,15 @@ func NewSpriteSheetFromImage(img *ebiten.Image, tileWidth, tileHeight int) *Spri
 	}
 }
 
-// GetTileImage returns a sub-image of the sprite at the specified index
-// Index is calculated as: row * tilesPerRow + col
-func (s *SpriteSheet) GetTileImage(index int) *ebiten.Image {
+// GetTileImageByCoord returns a sub-image of the sprite at the specified row and column
+func (s *SpriteSheet) GetTileImageByCoord(row, col int) *ebiten.Image {
 	if s == nil || s.image == nil {
 		return nil
 	}
 
-	// Calculate row and column from index
-	row := index / s.tilesPerRow
-	col := index % s.tilesPerRow
-
 	// Check bounds
 	if row >= s.tilesPerCol || col >= s.tilesPerRow || row < 0 || col < 0 {
-		log.Printf("Sprite index %d out of bounds (max: %d)", index, s.tilesPerRow*s.tilesPerCol-1)
+		log.Printf("Sprite coordinates (%d, %d) out of bounds (max: %d, %d)", row, col, s.tilesPerCol-1, s.tilesPerRow-1)
 		return nil
 	}
 
@@ -65,21 +60,4 @@ func (s *SpriteSheet) GetTileImage(index int) *ebiten.Image {
 
 	// Create sub-image
 	return s.image.SubImage(image.Rect(srcX, srcY, srcX+s.tileWidth, srcY+s.tileHeight)).(*ebiten.Image)
-}
-
-// DrawTile draws a specific tile from the sprite sheet at the given screen position
-func (s *SpriteSheet) DrawTile(screen *ebiten.Image, tileIndex int, x, y float64, options *ebiten.DrawImageOptions) {
-	tileImg := s.GetTileImage(tileIndex)
-	if tileImg == nil {
-		return
-	}
-
-	if options == nil {
-		options = &ebiten.DrawImageOptions{}
-	}
-
-	// Apply translation
-	options.GeoM.Translate(x, y)
-
-	screen.DrawImage(tileImg, options)
 }

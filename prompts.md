@@ -12,4 +12,5 @@
 - Add a new module spritesheet.go, which loads an image containing a bunch of tile images, and is capable of drawing any one of them on the screen arbitrarily as requested. Don't use it anywhere yet.
 - Have the map.Draw function take a callback which should return a 32x32 ebiten.Image for the given x/y coord. The callback will be supplied with the m.Tiles map, and the current coordinate.
 - Add a map from tile.Type to ebiten.Image to the game structure so we can cache the images
+- Use the spritesheet module to load the assets/grass.png and assets/stone.png images. Then use grasses 0,0 image as the empty square, and stones 1,1 image as the wall square
 

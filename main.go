@@ -14,6 +14,8 @@ type Game struct {
 	marble                    *Marble
 	gameMap                   *GameMap
 	tileImageCache            map[TileType]*ebiten.Image
+	grassSpriteSheet          *SpriteSheet
+	stoneSpriteSheet          *SpriteSheet
 	screenWidth, screenHeight int
 }
 
@@ -79,27 +81,44 @@ func (g *Game) getTileImageCallback(tiles [][]Tile, x, y int) *ebiten.Image {
 	}
 
 	// Create new image if not cached
-	var tileColor color.Color
+	var tileImage *ebiten.Image
+
 	switch tile.Type {
 	case TileWall:
-		tileColor = color.RGBA{100, 100, 100, 255} // Gray wall
+		// Use stone spritesheet at position (1,1)
+		if g.stoneSpriteSheet != nil {
+			tileImage = g.stoneSpriteSheet.GetTileImageByCoord(1, 1)
+		} else {
+			tileImage = createTileImage(color.RGBA{100, 100, 100, 255}) // Fallback gray wall
+		}
 	case TileFloor:
-		tileColor = color.RGBA{50, 50, 60, 255} // Dark floor
+		// Use grass spritesheet at position (0,0)
+		if g.grassSpriteSheet != nil {
+			tileImage = g.grassSpriteSheet.GetTileImageByCoord(0, 0)
+		} else {
+			tileImage = createTileImage(color.RGBA{50, 50, 60, 255}) // Fallback dark floor
+		}
 	case TileSlow:
-		tileColor = color.RGBA{100, 50, 50, 255} // Red slow tile
+		tileImage = createTileImage(color.RGBA{100, 50, 50, 255}) // Red slow tile
 	case TileFast:
-		tileColor = color.RGBA{50, 100, 50, 255} // Green fast tile
+		tileImage = createTileImage(color.RGBA{50, 100, 50, 255}) // Green fast tile
 	case TileSlowMild:
-		tileColor = color.RGBA{80, 50, 60, 255} // Light red mild slow tile
+		tileImage = createTileImage(color.RGBA{80, 50, 60, 255}) // Light red mild slow tile
 	case TileFastMild:
-		tileColor = color.RGBA{50, 80, 60, 255} // Light green mild fast tile
+		tileImage = createTileImage(color.RGBA{50, 80, 60, 255}) // Light green mild fast tile
 	default:
-		tileColor = color.RGBA{50, 50, 60, 255} // Default to floor
+		// Default to floor (grass)
+		if g.grassSpriteSheet != nil {
+			tileImage = g.grassSpriteSheet.GetTileImageByCoord(0, 0)
+		} else {
+			tileImage = createTileImage(color.RGBA{50, 50, 60, 255}) // Fallback
+		}
 	}
 
-	// Create and cache the image
-	tileImage := createTileImage(tileColor)
-	g.tileImageCache[tile.Type] = tileImage
+	// Cache the image if it was successfully created
+	if tileImage != nil {
+		g.tileImageCache[tile.Type] = tileImage
+	}
 
 	return tileImage
 }
@@ -143,7 +162,18 @@ func main() {
 		tileImageCache: make(map[TileType]*ebiten.Image),
 	}
 
-	// Create the map with 40x40 pixel tiles
+	// Load sprite sheets (assuming 32x32 tiles)
+	game.grassSpriteSheet = NewSpriteSheet("assets/grass.png", 32, 32)
+	game.stoneSpriteSheet = NewSpriteSheet("assets/stone.png", 32, 32)
+
+	if game.grassSpriteSheet == nil {
+		log.Printf("Warning: Failed to load grass sprite sheet")
+	}
+	if game.stoneSpriteSheet == nil {
+		log.Printf("Warning: Failed to load stone sprite sheet")
+	}
+
+	// Create the map with 32x32 pixel tiles (matching sprite size)
 	game.gameMap = NewGameMap(sampleMap, 32, game.screenWidth, game.screenHeight)
 
 	// Create marble at starting position (adjust to be within the map)

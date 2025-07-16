@@ -1,0 +1,3 @@
+- What's a good name for a video game that combines the old marble labyrinth game (played on a wooden board where you have to tilt the board to roll the marble around and avoid falling into a hole), with pacman, where you have to 'tilt' the game to make pacman move
+- Create a minimal ebitengine main.go file that opens a 1280x720 window. Title the window "TiltMan"
+

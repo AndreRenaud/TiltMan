@@ -16,6 +16,8 @@ const (
 	TileFloor
 	TileSlow
 	TileFast
+	TileSlowMild
+	TileFastMild
 )
 
 // Tile represents a single tile in the map
@@ -85,6 +87,14 @@ func NewGameMap(asciiMap string, tileSize int, screenWidth, screenHeight int) *G
 				tile.Type = TileFast
 				tile.Solid = false
 				tile.Effect = 1.5 // Speed up marble
+			case '(':
+				tile.Type = TileSlowMild
+				tile.Solid = false
+				tile.Effect = 0.75 // Mildly slow down marble
+			case ')':
+				tile.Type = TileFastMild
+				tile.Solid = false
+				tile.Effect = 1.25 // Mildly speed up marble
 			default:
 				// Default to floor for unknown characters
 				tile.Type = TileFloor
@@ -212,6 +222,10 @@ func (m *GameMap) Draw(screen *ebiten.Image) {
 				tileColor = color.RGBA{100, 50, 50, 255} // Red slow tile
 			case TileFast:
 				tileColor = color.RGBA{50, 100, 50, 255} // Green fast tile
+			case TileSlowMild:
+				tileColor = color.RGBA{80, 50, 60, 255} // Light red mild slow tile
+			case TileFastMild:
+				tileColor = color.RGBA{50, 80, 60, 255} // Light green mild fast tile
 			}
 
 			// Draw the tile as a rectangle

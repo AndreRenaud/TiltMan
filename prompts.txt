@@ -8,5 +8,4 @@
   - < a bit of floor that slows the marble down
   - > a bit of floor that speeds the marble up
 - Change the Marbles update function so that instead of actually changing the x/y coord, it calculates the new ones and returns them. We can then verify that we're not inside a wall before applying them.
-
-
+- Add '(' & ')' character support to the map. These should slow down/speed up, but not as much as the < & > ones

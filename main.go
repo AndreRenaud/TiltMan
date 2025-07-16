@@ -10,6 +10,10 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+const (
+	tileSize = 32 // Size of each tile in pixels
+)
+
 //go:embed assets/*
 var assetsFS embed.FS
 
@@ -74,6 +78,11 @@ func (g *Game) Update() error {
 		g.marble.SetVelocity(0, 0)
 	}
 
+	// Generate new maze if M is pressed
+	if inpututil.IsKeyJustPressed(ebiten.KeyM) {
+		g.generateNewMaze()
+	}
+
 	// Update marble physics and get proposed new position
 	proposedX, proposedY := g.marble.Update()
 
@@ -89,10 +98,10 @@ func (g *Game) Update() error {
 
 // createTileImage creates a 32x32 colored image for a tile
 func createTileImage(tileColor color.Color) *ebiten.Image {
-	img := ebiten.NewImage(32, 32)
+	img := ebiten.NewImage(tileSize, tileSize)
 	img.Fill(tileColor)
 
-	vector.DrawFilledRect(img, 0, 0, 32, 32, tileColor, false)
+	vector.DrawFilledRect(img, 0, 0, tileSize, tileSize, tileColor, false)
 
 	return img
 }
@@ -176,41 +185,56 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 	return g.screenWidth, g.screenHeight
 }
 
-func main() {
-	// Define a sample map
-	sampleMap := `
-#######################################
-#........#............................#
-#...<....(...)..>.....................#
-#........#............................#
-####.#########.....##.................#
-#.....................................#
-#....#....................>...........#
-#.............>.......................#
-#.....................................#
-#.....................>.>.............#
-#............>........................#
-#..........>..........>...............#
-#.....................................#
-#.....................................#
-#..........>..>.......>...............#
-#.....................................#
-#.................>...................#
-#........#............................#
-#........#............................#
-#...)....(...<..>.....................#
-#........#............................#
-#######################################`
+// generateNewMaze creates a new procedural maze and updates the game map
+func (g *Game) generateNewMaze() {
+	// Calculate maze dimensions based on screen size and tile size
+	// Assume 32x32 tiles to match the existing setup
+	mazeWidth := (g.screenWidth / tileSize) - 2 // Leave some border space
+	mazeHeight := (g.screenHeight / tileSize) - 2
 
+	// Ensure odd dimensions for proper maze structure
+	if mazeWidth%2 == 0 {
+		mazeWidth--
+	}
+	if mazeHeight%2 == 0 {
+		mazeHeight--
+	}
+
+	mazeLines := CreateMazeWithSpecialTiles(mazeWidth, mazeHeight, 0.15)
+
+	// Convert slice of strings to single string
+	mazeStr := ""
+	for _, line := range mazeLines {
+		mazeStr += line + "\n"
+	}
+
+	// Update the game map with the new maze
+	g.gameMap = NewGameMap(mazeStr, tileSize, g.screenWidth, g.screenHeight)
+
+	// Reset marble to a safe starting position (top-left open area)
+	startX := float64(g.gameMap.OffsetX + 2*tileSize)
+	startY := float64(g.gameMap.OffsetY + 2*tileSize)
+	g.marble.SetPosition(startX, startY)
+	g.marble.SetVelocity(0, 0)
+}
+
+func main() {
 	// Create a game instance with a marble and map
 	game := &Game{
 		screenWidth:  1280,
 		screenHeight: 720,
 	}
 
+	// Print controls information
+	log.Println("TiltMan Controls:")
+	log.Println("- Arrow keys or WASD: Tilt the board")
+	log.Println("- R: Reset marble position")
+	log.Println("- M: Generate new random maze")
+	log.Println("- On mobile: Tilt your device to control the marble!")
+
 	// Load sprite sheets from embedded filesystem (assuming 32x32 tiles)
-	game.grassSpriteSheet = NewSpriteSheetFromFS(assetsFS, "assets/grass.png", 32, 32)
-	game.stoneSpriteSheet = NewSpriteSheetFromFS(assetsFS, "assets/stone.png", 32, 32)
+	game.grassSpriteSheet = NewSpriteSheetFromFS(assetsFS, "assets/grass.png", tileSize, tileSize)
+	game.stoneSpriteSheet = NewSpriteSheetFromFS(assetsFS, "assets/stone.png", tileSize, tileSize)
 
 	if game.grassSpriteSheet == nil {
 		log.Fatalf("Warning: Failed to load grass sprite sheet")
@@ -219,13 +243,12 @@ func main() {
 		log.Fatalf("Warning: Failed to load stone sprite sheet")
 	}
 
-	// Create the map with 32x32 pixel tiles (matching sprite size)
-	game.gameMap = NewGameMap(sampleMap, 32, game.screenWidth, game.screenHeight)
-
 	// Create marble at starting position (adjust to be within the map)
-	startX := float64(game.gameMap.OffsetX + 2*game.gameMap.TileSize) // Start in an open area
-	startY := float64(game.gameMap.OffsetY + 2*game.gameMap.TileSize)
+	startX := float64(2 * tileSize)
+	startY := float64(2 * tileSize)
 	game.marble = NewMarble(startX, startY, 15, color.RGBA{255, 100, 100, 255})
+
+	game.generateNewMaze()
 
 	ebiten.SetWindowSize(game.screenWidth, game.screenHeight)
 	ebiten.SetWindowTitle("TiltMan")

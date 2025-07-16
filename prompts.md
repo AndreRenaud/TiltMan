@@ -19,3 +19,5 @@
 - Add a channel of orientation events, which main.go will pull from (if it has some), and which events_wasm.go exposes a function to push into. Call this function from index.html when new orientation events happen
 - Update index.html to make this a proper web app when saved to the home page on mobile devices
 - (On ChatGPT) - Create a 192x192 icon for a game that is a marble run game where tilt the phone to play
+- Write mapgenerator.go which creates a maze of arbitrary size (specified during construction). The maze should be constructed out of ascii characters. Make sure the border is all '#' symbols.
+  - The output should be a string array, with one line per horizontal row of the maze.

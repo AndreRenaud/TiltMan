@@ -1,11 +1,9 @@
 package main
 
 import (
-	"image/color"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 // TileType represents different types of tiles in the map
@@ -123,14 +121,6 @@ func (m *GameMap) GetTileAt(pixelX, pixelY float64) *Tile {
 	return &m.Tiles[gridY][gridX]
 }
 
-// GetTileAtGrid returns the tile at the given grid coordinates
-func (m *GameMap) GetTileAtGrid(gridX, gridY int) *Tile {
-	if gridX < 0 || gridX >= m.Width || gridY < 0 || gridY >= m.Height {
-		return nil
-	}
-	return &m.Tiles[gridY][gridX]
-}
-
 // IsWallAt checks if there's a wall at the given pixel coordinates
 func (m *GameMap) IsWallAt(pixelX, pixelY float64) bool {
 	tile := m.GetTileAt(pixelX, pixelY)
@@ -200,40 +190,28 @@ func (m *GameMap) ApplyTileEffects(marble *Marble) {
 	}
 }
 
-// Draw renders the map to the screen
-func (m *GameMap) Draw(screen *ebiten.Image) {
+// TileImageCallback is a function type that returns an image for a given tile coordinate
+type TileImageCallback func(tiles [][]Tile, x, y int) *ebiten.Image
+
+// Draw renders the map to the screen using a callback to get tile images
+func (m *GameMap) Draw(screen *ebiten.Image, getTileImage TileImageCallback) {
 	for y := 0; y < m.Height; y++ {
 		for x := 0; x < m.Width; x++ {
-			tile := &m.Tiles[y][x]
-
 			// Calculate pixel position
-			pixelX := float32(m.OffsetX + x*m.TileSize)
-			pixelY := float32(m.OffsetY + y*m.TileSize)
-			tileSize := float32(m.TileSize)
+			pixelX := float64(m.OffsetX + x*m.TileSize)
+			pixelY := float64(m.OffsetY + y*m.TileSize)
 
-			var tileColor color.Color
+			// Get the tile image from the callback
+			tileImage := getTileImage(m.Tiles, x, y)
 
-			switch tile.Type {
-			case TileWall:
-				tileColor = color.RGBA{100, 100, 100, 255} // Gray wall
-			case TileFloor:
-				tileColor = color.RGBA{50, 50, 60, 255} // Dark floor
-			case TileSlow:
-				tileColor = color.RGBA{100, 50, 50, 255} // Red slow tile
-			case TileFast:
-				tileColor = color.RGBA{50, 100, 50, 255} // Green fast tile
-			case TileSlowMild:
-				tileColor = color.RGBA{80, 50, 60, 255} // Light red mild slow tile
-			case TileFastMild:
-				tileColor = color.RGBA{50, 80, 60, 255} // Light green mild fast tile
+			if tileImage != nil {
+				// Draw the tile image, scaling it to fit the tile size
+				options := &ebiten.DrawImageOptions{}
+
+				options.GeoM.Translate(pixelX, pixelY)
+
+				screen.DrawImage(tileImage, options)
 			}
-
-			// Draw the tile as a rectangle
-			vector.DrawFilledRect(screen, pixelX, pixelY, tileSize, tileSize, tileColor, true)
-
-			// Draw borders for better visibility
-			borderColor := color.RGBA{80, 80, 90, 255}
-			vector.StrokeRect(screen, pixelX, pixelY, tileSize, tileSize, 1, borderColor, true)
 		}
 	}
 }

@@ -6,12 +6,14 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 // Game represents the main game state
 type Game struct {
 	marble                    *Marble
 	gameMap                   *GameMap
+	tileImageCache            map[TileType]*ebiten.Image
 	screenWidth, screenHeight int
 }
 
@@ -53,6 +55,55 @@ func (g *Game) Update() error {
 	return nil
 }
 
+// createTileImage creates a 32x32 colored image for a tile
+func createTileImage(tileColor color.Color) *ebiten.Image {
+	img := ebiten.NewImage(32, 32)
+	img.Fill(tileColor)
+
+	vector.DrawFilledRect(img, 0, 0, 32, 32, tileColor, false)
+
+	return img
+}
+
+// getTileImageCallback returns the appropriate tile image for the given coordinates
+func (g *Game) getTileImageCallback(tiles [][]Tile, x, y int) *ebiten.Image {
+	if y >= len(tiles) || x >= len(tiles[y]) {
+		return nil
+	}
+
+	tile := &tiles[y][x]
+
+	// Check if we have a cached image for this tile type
+	if cachedImage, exists := g.tileImageCache[tile.Type]; exists {
+		return cachedImage
+	}
+
+	// Create new image if not cached
+	var tileColor color.Color
+	switch tile.Type {
+	case TileWall:
+		tileColor = color.RGBA{100, 100, 100, 255} // Gray wall
+	case TileFloor:
+		tileColor = color.RGBA{50, 50, 60, 255} // Dark floor
+	case TileSlow:
+		tileColor = color.RGBA{100, 50, 50, 255} // Red slow tile
+	case TileFast:
+		tileColor = color.RGBA{50, 100, 50, 255} // Green fast tile
+	case TileSlowMild:
+		tileColor = color.RGBA{80, 50, 60, 255} // Light red mild slow tile
+	case TileFastMild:
+		tileColor = color.RGBA{50, 80, 60, 255} // Light green mild fast tile
+	default:
+		tileColor = color.RGBA{50, 50, 60, 255} // Default to floor
+	}
+
+	// Create and cache the image
+	tileImage := createTileImage(tileColor)
+	g.tileImageCache[tile.Type] = tileImage
+
+	return tileImage
+}
+
 // Draw draws the game screen.
 // Draw is called every frame (typically 1/60[s] for 60Hz display).
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -60,7 +111,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{20, 20, 30, 255})
 
 	// Draw the map
-	g.gameMap.Draw(screen)
+	g.gameMap.Draw(screen, g.getTileImageCallback)
 
 	// Draw the marble
 	g.marble.Draw(screen)
@@ -87,12 +138,13 @@ func main() {
 
 	// Create a game instance with a marble and map
 	game := &Game{
-		screenWidth:  1280,
-		screenHeight: 720,
+		screenWidth:    1280,
+		screenHeight:   720,
+		tileImageCache: make(map[TileType]*ebiten.Image),
 	}
 
 	// Create the map with 40x40 pixel tiles
-	game.gameMap = NewGameMap(sampleMap, 40, game.screenWidth, game.screenHeight)
+	game.gameMap = NewGameMap(sampleMap, 32, game.screenWidth, game.screenHeight)
 
 	// Create marble at starting position (adjust to be within the map)
 	startX := float64(game.gameMap.OffsetX + 2*game.gameMap.TileSize) // Start in an open area

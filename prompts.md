@@ -15,4 +15,6 @@
 - Use the spritesheet module to load the assets/grass.png and assets/stone.png images. Then use grasses 0,0 image as the empty square, and stones 1,1 image as the wall square
 - Need to make the wall drawing a bit smarter. If the wall has non-wall to the right of it, it should be using the sprite from 2,1 instead.
 - Use the embed module to embed the assets/ directory, and update spritesheet to work with fs.FS
+- Add some javascript to index.html so that deviceorientation events are captured & logged to the javascript console
+- Add a channel of orientation events, which main.go will pull from (if it has some), and which events_wasm.go exposes a function to push into. Call this function from index.html when new orientation events happen
 

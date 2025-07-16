@@ -13,6 +13,16 @@ import (
 //go:embed assets/*
 var assetsFS embed.FS
 
+// orientationChannel is a buffered channel for orientation events - from events_wasm.go
+var orientationChannel = make(chan OrientationEvent, 10)
+
+// OrientationEvent represents device orientation data
+type OrientationEvent struct {
+	Alpha float64 // Z-axis rotation (compass heading)
+	Beta  float64 // X-axis rotation (front-to-back tilt)
+	Gamma float64 // Y-axis rotation (left-to-right tilt)
+}
+
 // Game represents the main game state
 type Game struct {
 	marble                    *Marble
@@ -25,6 +35,23 @@ type Game struct {
 // Update proceeds the game state.
 // Update is called every tick (1/60 [s] by default).
 func (g *Game) Update() error {
+	// Handle device orientation events (for mobile/web)
+	select {
+	case event := <-orientationChannel:
+		// Convert gamma (left-right tilt) to horizontal force
+		// Gamma ranges from -90 to 90 degrees
+		gammaForce := event.Gamma / 90.0 * 0.3 // Scale to reasonable force
+
+		// Convert beta (front-back tilt) to vertical force
+		// Beta ranges from -180 to 180 degrees, but we'll use -90 to 90
+		betaForce := event.Beta / 90.0 * 0.3 // Scale to reasonable force
+
+		// Apply orientation forces
+		g.marble.AddForce(gammaForce, betaForce)
+	default:
+		// No orientation event, use keyboard input for tilt mechanics
+	}
+
 	// Handle keyboard input for tilt mechanics
 	tiltForce := 0.2
 

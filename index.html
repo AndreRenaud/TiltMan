@@ -6,4 +6,68 @@ const go = new Go();
 WebAssembly.instantiateStreaming(fetch("game.wasm"), go.importObject).then(result => {
     go.run(result.instance);
 });
+
+// Device orientation event handling
+function handleDeviceOrientation(event) {
+    console.log('Device Orientation:', {
+        alpha: event.alpha,     // Z-axis rotation (compass heading)
+        beta: event.beta,       // X-axis rotation (front-to-back tilt)
+        gamma: event.gamma,     // Y-axis rotation (left-to-right tilt)
+        absolute: event.absolute
+    });
+    
+    // Send orientation data to Go via WASM
+    if (window.pushOrientationEvent) {
+        window.pushOrientationEvent(
+            event.alpha || 0,
+            event.beta || 0, 
+            event.gamma || 0
+        );
+    }
+}
+
+// Request permission for iOS 13+ devices
+function requestOrientationPermission() {
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+            .then(permissionState => {
+                if (permissionState === 'granted') {
+                    console.log('Device orientation permission granted');
+                    window.addEventListener('deviceorientation', handleDeviceOrientation);
+                } else {
+                    console.log('Device orientation permission denied');
+                }
+            })
+            .catch(console.error);
+    } else {
+        // For non-iOS devices or older iOS versions
+        console.log('Adding device orientation listener (no permission required)');
+        window.addEventListener('deviceorientation', handleDeviceOrientation);
+    }
+}
+
+// Add event listeners when page loads
+window.addEventListener('load', () => {
+    console.log('Page loaded, setting up device orientation');
+    
+    // Check if device orientation is supported
+    if (window.DeviceOrientationEvent) {
+        console.log('Device orientation is supported');
+        
+        // Add a button for iOS permission request
+        const permissionButton = document.createElement('button');
+        permissionButton.textContent = 'Enable Device Orientation';
+        permissionButton.style.cssText = 'position: fixed; top: 10px; left: 10px; z-index: 1000; padding: 10px; background: #007AFF; color: white; border: none; border-radius: 5px; cursor: pointer;';
+        permissionButton.onclick = () => {
+            requestOrientationPermission();
+            permissionButton.style.display = 'none';
+        };
+        document.body.appendChild(permissionButton);
+        
+        // Try to add listener immediately (works on most devices)
+        requestOrientationPermission();
+    } else {
+        console.log('Device orientation is not supported on this device');
+    }
+});
 </script>

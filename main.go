@@ -40,11 +40,11 @@ func (g *Game) Update() error {
 	case event := <-orientationChannel:
 		// Convert gamma (left-right tilt) to horizontal force
 		// Gamma ranges from -90 to 90 degrees
-		gammaForce := event.Gamma / 90.0 * 0.3 // Scale to reasonable force
+		gammaForce := event.Gamma / 90.0 * 0.5 // Scale to reasonable force
 
 		// Convert beta (front-back tilt) to vertical force
 		// Beta ranges from -180 to 180 degrees, but we'll use -90 to 90
-		betaForce := event.Beta / 90.0 * 0.3 // Scale to reasonable force
+		betaForce := event.Beta / 90.0 * 0.5 // Scale to reasonable force
 
 		// Apply orientation forces
 		g.marble.AddForce(gammaForce, betaForce)

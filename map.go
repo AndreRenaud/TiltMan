@@ -107,6 +107,13 @@ func NewGameMap(asciiMap string, tileSize int, screenWidth, screenHeight int) *G
 	return gameMap
 }
 
+func (m *GameMap) GetType(x, y int) TileType {
+	if y < 0 || y >= m.Height || x < 0 || x >= m.Width {
+		return TileFloor // Default to floor for out-of-bounds
+	}
+	return m.Tiles[y][x].Type
+}
+
 // GetTileAt returns the tile at the given pixel coordinates
 func (m *GameMap) GetTileAt(pixelX, pixelY float64) *Tile {
 	// Convert pixel coordinates to grid coordinates
@@ -121,10 +128,17 @@ func (m *GameMap) GetTileAt(pixelX, pixelY float64) *Tile {
 	return &m.Tiles[gridY][gridX]
 }
 
-// IsWallAt checks if there's a wall at the given pixel coordinates
-func (m *GameMap) IsWallAt(pixelX, pixelY float64) bool {
+// IsSolidAt checks if there's a wall at the given pixel coordinates
+func (m *GameMap) IsSolidAt(pixelX, pixelY float64) bool {
 	tile := m.GetTileAt(pixelX, pixelY)
 	return tile != nil && tile.Solid
+}
+
+func (m *GameMap) IsSolid(x, y int) bool {
+	if y < 0 || y >= m.Height || x < 0 || x >= m.Width {
+		return true
+	}
+	return m.Tiles[y][x].Solid
 }
 
 // GetEffectAt returns the speed effect at the given pixel coordinates
@@ -156,7 +170,7 @@ func (m *GameMap) CheckCollision(marble *Marble, newX, newY float64) (float64, f
 		checkX := marble.X + point.dx
 		checkY := marble.Y + point.dy
 
-		if m.IsWallAt(checkX, checkY) {
+		if m.IsSolidAt(checkX, checkY) {
 			// Simple collision response - stop movement in the direction of collision
 			if point.dx < 0 && marble.VX < 0 { // Left collision
 				newX = marble.X
@@ -191,7 +205,7 @@ func (m *GameMap) ApplyTileEffects(marble *Marble) {
 }
 
 // TileImageCallback is a function type that returns an image for a given tile coordinate
-type TileImageCallback func(tiles [][]Tile, x, y int) *ebiten.Image
+type TileImageCallback func(m *GameMap, x, y int) *ebiten.Image
 
 // Draw renders the map to the screen using a callback to get tile images
 func (m *GameMap) Draw(screen *ebiten.Image, getTileImage TileImageCallback) {
@@ -202,7 +216,7 @@ func (m *GameMap) Draw(screen *ebiten.Image, getTileImage TileImageCallback) {
 			pixelY := float64(m.OffsetY + y*m.TileSize)
 
 			// Get the tile image from the callback
-			tileImage := getTileImage(m.Tiles, x, y)
+			tileImage := getTileImage(m, x, y)
 
 			if tileImage != nil {
 				// Draw the tile image, scaling it to fit the tile size

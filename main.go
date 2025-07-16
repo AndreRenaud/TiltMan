@@ -67,27 +67,26 @@ func createTileImage(tileColor color.Color) *ebiten.Image {
 }
 
 // getTileImageCallback returns the appropriate tile image for the given coordinates
-func (g *Game) getTileImageCallback(tiles [][]Tile, x, y int) *ebiten.Image {
-	if y >= len(tiles) || x >= len(tiles[y]) {
-		return nil
-	}
-
-	tile := &tiles[y][x]
-
-	switch tile.Type {
+func (g *Game) getTileImageCallback(m *GameMap, x, y int) *ebiten.Image {
+	switch m.GetType(x, y) {
 	case TileWall:
 		// Use stone spritesheet with smart wall selection
 		// Check if there's a non-wall to the right
-		hasNonWallRight := false
-		if x+1 < len(tiles[y]) {
-			rightTile := &tiles[y][x+1]
-			hasNonWallRight = !rightTile.Solid
-		} else {
-			// If we're at the edge, consider it as having non-wall to the right
-			hasNonWallRight = true
+		solidAround := []bool{
+			m.IsSolid(x-1, y-1),
+			m.IsSolid(x, y-1),
+			m.IsSolid(x+1, y-1),
+			m.IsSolid(x-1, y),
+			m.IsSolid(x, y),
+			m.IsSolid(x+1, y),
+			m.IsSolid(x-1, y+1),
+			m.IsSolid(x, y+1),
+			m.IsSolid(x+1, y+1),
 		}
 
-		if hasNonWallRight {
+		if !solidAround[7] { // Check if there's grass (floor) below
+			return g.stoneSpriteSheet.GetTileImageByCoord(2, 1) // Wall with grass below
+		} else if !solidAround[5] { // Check if there's a non-wall to the right
 			return g.stoneSpriteSheet.GetTileImageByCoord(1, 2) // Wall with right edge
 		}
 		return g.stoneSpriteSheet.GetTileImageByCoord(1, 1) // Regular wall

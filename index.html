@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<head><title>Tilt Man</title></head>
+<script src="wasm_exec.js"></script>
+<script>
+const go = new Go();
+WebAssembly.instantiateStreaming(fetch("game.wasm"), go.importObject).then(result => {
+    go.run(result.instance);
+});
+</script>

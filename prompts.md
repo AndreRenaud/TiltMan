@@ -17,4 +17,5 @@
 - Use the embed module to embed the assets/ directory, and update spritesheet to work with fs.FS
 - Add some javascript to index.html so that deviceorientation events are captured & logged to the javascript console
 - Add a channel of orientation events, which main.go will pull from (if it has some), and which events_wasm.go exposes a function to push into. Call this function from index.html when new orientation events happen
-
+- Update index.html to make this a proper web app when saved to the home page on mobile devices
+- (On ChatGPT) - Create a 192x192 icon for a game that is a marble run game where tilt the phone to play

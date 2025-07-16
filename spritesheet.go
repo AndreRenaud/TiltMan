@@ -2,6 +2,7 @@ package main
 
 import (
 	"image"
+	"io/fs"
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -17,13 +18,21 @@ type SpriteSheet struct {
 	tilesPerCol int
 }
 
-// NewSpriteSheet creates a new sprite sheet from an image file
-func NewSpriteSheet(imagePath string, tileWidth, tileHeight int) *SpriteSheet {
-	img, _, err := ebitenutil.NewImageFromFile(imagePath)
+// NewSpriteSheetFromFS creates a new sprite sheet from an embedded filesystem
+func NewSpriteSheetFromFS(filesystem fs.FS, imagePath string, tileWidth, tileHeight int) *SpriteSheet {
+	file, err := filesystem.Open(imagePath)
 	if err != nil {
-		log.Printf("Failed to load sprite sheet from %s: %v", imagePath, err)
+		log.Printf("Failed to open sprite sheet from embedded FS %s: %v", imagePath, err)
 		return nil
 	}
+	defer file.Close()
+
+	img, _, err := ebitenutil.NewImageFromReader(file)
+	if err != nil {
+		log.Printf("Failed to create image from embedded FS %s: %v", imagePath, err)
+		return nil
+	}
+
 	return NewSpriteSheetFromImage(img, tileWidth, tileHeight)
 }
 

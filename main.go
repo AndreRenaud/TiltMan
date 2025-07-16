@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"image/color"
 	"log"
 
@@ -8,6 +9,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
+
+//go:embed assets/*
+var assetsFS embed.FS
 
 // Game represents the main game state
 type Game struct {
@@ -177,9 +181,9 @@ func main() {
 		screenHeight: 720,
 	}
 
-	// Load sprite sheets (assuming 32x32 tiles)
-	game.grassSpriteSheet = NewSpriteSheet("assets/grass.png", 32, 32)
-	game.stoneSpriteSheet = NewSpriteSheet("assets/stone.png", 32, 32)
+	// Load sprite sheets from embedded filesystem (assuming 32x32 tiles)
+	game.grassSpriteSheet = NewSpriteSheetFromFS(assetsFS, "assets/grass.png", 32, 32)
+	game.stoneSpriteSheet = NewSpriteSheetFromFS(assetsFS, "assets/stone.png", 32, 32)
 
 	if game.grassSpriteSheet == nil {
 		log.Fatalf("Warning: Failed to load grass sprite sheet")
